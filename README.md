@@ -43,7 +43,9 @@
 
 1. **克隆项目**
    ```bash
-   git clone https://your.repo.url/HeadLock.git
+   git clone https://github.com/ctkqiang/HeadLock.git
+   or
+   git clone https://gitcode.com/ctkqiang_sr/HeadLock.git
    cd HeadLock
    ```
 
