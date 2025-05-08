@@ -41,11 +41,12 @@ class 终结者界面:
 
         # FaceMesh 中额头中点的地标编号
         self.额头点编号 = 10
-
         self.显示标签 = Label(self.窗口)
         self.显示标签.pack()
-
         self.摄像头 = 计算机视觉_2.VideoCapture(0)
+        self.摄像头.set(计算机视觉_2.CAP_PROP_FRAME_WIDTH, 1200)
+        self.摄像头.set(计算机视觉_2.CAP_PROP_FRAME_HEIGHT, 800)
+        self.摄像头.set(计算机视觉_2.CAP_PROP_FPS, 15)
         self.更新画面()
         self.窗口.protocol("WM_DELETE_WINDOW", self.关闭窗口)
         self.窗口.mainloop()
@@ -191,21 +192,21 @@ class 终结者界面:
         elif self.扫描线位置 <= 0:
             self.扫描方向 = 1
 
-        # 移除黄色扫描线
-        # 计算机视觉_2.line(
-        #     图像, (0, self.扫描线位置), (宽度, self.扫描线位置), (0, 255, 255), 1
-        # )
+        # 绘制红色扫描线
+        计算机视觉_2.line(
+            图像, (0, self.扫描线位置), (宽度, self.扫描线位置), (0, 0, 255), 1
+        )
 
-        # 移除扫描线上的黄色小方块
-        # for i in range(0, 宽度, 50):
-        #     if random.random() > 0.7:
-        #         计算机视觉_2.rectangle(
-        #             图像,
-        #             (i, self.扫描线位置 - 2),
-        #             (i + random.randint(5, 20), self.扫描线位置 + 2),
-        #             (0, 255, 255),
-        #             -1,
-        #         )
+        # 添加扫描线上的红色小方块
+        for i in range(0, 宽度, 50):
+            if random.random() > 0.7:
+                计算机视觉_2.rectangle(
+                    图像,
+                    (i, self.扫描线位置 - 2),
+                    (i + random.randint(5, 20), self.扫描线位置 + 2),
+                    (0, 0, 255),
+                    -1,
+                )
 
     def 画系统信息(self, 图像):
         """绘制终结者风格的系统信息"""
@@ -215,6 +216,13 @@ class 终结者界面:
         当前时间 = time.strftime("%H:%M:%S", time.localtime())
         运行时间 = int(time.time() - self.系统启动时间)
 
+        # 伪造终结者风格的系统数据
+        cpu温度 = f"{random.randint(45, 65)}°C"
+        电池电量 = f"{random.randint(60, 100)}%"
+        网络状态 = random.choice(["已连接", "弱信号", "断开"])
+        目标编号 = f"ID-{random.randint(1000, 9999)}"
+        系统警告 = random.choice(["无", "低电量", "高温", "异常信号"])
+
         # 左上角系统信息
         信息列表 = [
             f"T-800 视觉系统 v1.0",
@@ -222,18 +230,23 @@ class 终结者界面:
             f"运行时间: {运行时间}s",
             f"扫描模式: 主动",
             f"威胁等级: {self.威胁等级}",
+            f"CPU温度: {cpu温度}",
+            f"电池电量: {电池电量}",
+            f"网络状态: {网络状态}",
+            f"目标编号: {目标编号}",
+            f"系统警告: {系统警告}",
         ]
 
         # 绘制半透明背景
         覆盖层 = 图像.copy()
-        计算机视觉_2.rectangle(覆盖层, (10, 10), (300, 150), (30, 30, 30), -1)
+        计算机视觉_2.rectangle(覆盖层, (10, 10), (320, 270), (30, 30, 30), -1)
         透明度 = 0.6
         计算机视觉_2.addWeighted(覆盖层, 透明度, 图像, 1 - 透明度, 0, 图像)
 
         # 绘制信息（全部改为红色）
         for i, 信息 in enumerate(信息列表):
             图像 = self.画中文文本(
-                图像, 信息, (20, 30 + i * 25), 字号=20, 颜色=(0, 0, 255)
+                图像, 信息, (20, 30 + i * 23), 字号=18, 颜色=(0, 0, 255)
             )
 
         # 右上角添加一些随机数据块，增强科技感
