@@ -6,11 +6,17 @@ try:
     import cv2 as 计算机视觉_2
     import mediapipe as 媒体管道
     import numpy as 数组处理库
-    from tkinter import Tk, Label
+    from tkinter import Tk, Label, Canvas
     from PIL import Image, ImageTk
     from PIL import ImageFont, ImageDraw
+    import threading
+    import queue
+    import sounddevice as sd
+    import numpy as np
 except ImportError:
-    print("请先安装必要的库：pip3 install opencv-python mediapipe tkinter pillow")
+    print(
+        "请先安装必要的库：pip3 install opencv-python mediapipe tkinter pillow sounddevice numpy"
+    )
     exit()
 
 
@@ -364,15 +370,6 @@ class 终结者界面:
         # 添加系统信息
         self.画系统信息(当前帧)
 
-        # 添加旋转齿轮
-        self.画旋转齿轮(当前帧, (100, 100), 30)
-
-        # 添加闪烁指示灯
-        self.画闪烁指示灯(当前帧, (200, 200))
-
-        # 添加进度条
-        self.画进度条(当前帧, (300, 300), 100, random.random())
-
         # 这里提前获取宽度和高度，避免后面未赋值
         高度, 宽度, _ = 当前帧.shape
 
@@ -566,6 +563,46 @@ class 终结者界面:
             颜色,
             粗细,
         )
+
+    def 采集音频(self):
+        """采集麦克风音频数据并放入音频队列"""
+        try:
+            while True:
+                音频数据 = sd.rec(
+                    int(0.05 * 16000), samplerate=16000, channels=1, dtype="float32"
+                )
+                sd.wait()
+                音频数据 = 音频数据.flatten()
+                self.音频队列.put(音频数据)
+        except Exception as e:
+            print(f"音频采集异常: {e}")
+
+    def 更新波形(self):
+        # 从队列取最新音频数据
+        while not self.音频队列.empty():
+            self.音频波形 = self.音频队列.get()
+        # 清空画布
+        self.波形画布.delete("all")
+        h = 80
+        w = 400
+        if self.音频波形 is not None and len(self.音频波形) > 0:
+            # 归一化
+            norm = np.abs(self.音频波形) / (np.max(np.abs(self.音频波形)) + 1e-6)
+            points = []
+            for i, v in enumerate(norm):
+                x = i * w / len(norm)
+                y = h / 2 - v * (h / 2 - 5)
+                points.append((x, y))
+            for i in range(len(points) - 1):
+                self.波形画布.create_line(
+                    points[i][0],
+                    points[i][1],
+                    points[i + 1][0],
+                    points[i + 1][1],
+                    fill="#ff0033",
+                    width=2,
+                )
+        self.窗口.after(30, self.更新波形)
 
 
 if __name__ == "__main__":
